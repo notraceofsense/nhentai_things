@@ -41,18 +41,16 @@ def get_book(n):
 
 	# For all the pages, get the image type and download them.
 	for x in book_json["images"]["pages"]:
-		filename = "{}.{}".format(
-			f, getImageType(book_json["images"]["pages"][i]["t"]))
-		open("{}\{}".format(current_dir, filename), "xb").write(requests.get(
-			"{}/{}".format(gallery_url, filename), allow_redirects=True
-			).content)
 
-		printBook(n, "{} downloaded.".format("{}/{}".format(gallery_url, filename)))
-    
+		threading.Thread(target=getPage, args=(x, i, f, book_json, n, gallery_url, current_dir,)).start()
+
 		i += 1
 		f += 1
 
-	printBook(n, "Finished downloading.")
+def getPage(x, i, f, j, n, g, c):
+	filename = "{}.{}".format(f, getImageType(j["images"]["pages"][i]["t"]))
+	open("{}\{}".format(c, filename), "xb").write(requests.get("{}/{}".format(g, filename), allow_redirects=True).content)
+	printBook(n, "{} downloaded.".format("{}/{}".format(g, filename)))
 
 # Function that appends book ID to debug messages
 def printBook(n, m):
@@ -94,6 +92,5 @@ for n in id_list:
 	threading.Thread(target=get_book, args=(n,)).start()
 
 for t in threading.enumerate():
-	if t == threading.current_thread():
-		continue
-	t.join()
+	if t != threading.current_thread():
+		t.join()
