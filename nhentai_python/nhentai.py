@@ -10,65 +10,8 @@
 # with stuff such as HTTP and writing to disk.
 # I can't remember if requests is installed by default or not.
 # If it isn't, https://requests.readthedocs.io/en/master/user/install/
-import requests, sys, os, argparse, threading
-
-# Moved the book-getting method into a function for multithreading.
-def get_book(n):
-	# Add the book id to the url so we can access the API
-	api_url = "https://nhentai.net/api/gallery/{}".format(n)
-
-	# get the JSON so we can get the media id.
-	print("{}: Getting metadata from nhentai...".format(n))
-	book_json = requests.get(api_url).json()
-
-	# Get the media id from the json so we can access the gallery.
-	media_id = book_json['media_id']
-	printBook(n, "Media ID: {}".format(media_id))
-
-	# add the media id to the url
-	gallery_url = "https://i.nhentai.net/galleries/{}".format(media_id)
-
-	# Make the directory.
-	printBook(n, "Making directory...")
-	current_dir = os.path.join(path, str(n))
-	os.mkdir(current_dir)
-
-	# Here's where the jank begins!
-	i = 0
-	f = 1
-
-	printBook(n, "Downloading...")
-
-	# For all the pages, get the image type and download them.
-	for x in book_json["images"]["pages"]:
-
-		threading.Thread(target=getPage, args=(x, i, f, book_json, n, gallery_url, current_dir,)).start()
-
-		i += 1
-		f += 1
-
-def getPage(x, i, f, j, n, g, c):
-	filename = "{}.{}".format(f, getImageType(j["images"]["pages"][i]["t"]))
-	open("{}\{}".format(c, filename), "xb").write(requests.get("{}/{}".format(g, filename), allow_redirects=True).content)
-	printBook(n, "{} downloaded.".format("{}/{}".format(g, filename)))
-
-# Function that appends book ID to debug messages
-def printBook(n, m):
-	print("{}: {}".format(n, m))
-
-# A function for getting the full file extentions from the abbreviations in the
-# JSON.
-# Python doesn't really have proper switch/case support. So we do this little
-# hack with dictionaries.
-# Part of the reason I want to rewrite this in C#/Java/something else.
-# Now if only I could get JSON's to work...
-def getImageType(s):
-    c = {
-        "j": "jpg",
-        "p": "png",
-        "g": "gif"
-    }
-    return c.get(s)
+import sys, os, argparse
+from book_thread import *
 
 # This big blob of code here is supposed to handle the command line args.
 # https://youtu.be/36lSzUMBJnc?t=176 << This is me right now.
@@ -86,11 +29,14 @@ args = vars(parser.parse_args())
 id_list = args.get('book_id')
 path = args.get('path')
 
+book_threads = []
+
 # For loop, yay batch jobs!
 for n in id_list:
-	# Yay, multithreading!
-	threading.Thread(target=get_book, args=(n,)).start()
+	# Yay, multithreading
+	t = Book_Thread.from_book_id(n, path, 8)
+	t.start()
+	book_threads.append(t)
 
-for t in threading.enumerate():
-	if t != threading.current_thread():
-		t.join()
+for t in book_threads:
+	t.join()

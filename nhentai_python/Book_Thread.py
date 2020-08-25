@@ -10,31 +10,30 @@ class Book_Thread(Thread):
         self.book = book
         self.path = path
         self.workers = workers
-        self.cwd = os.path.join(path, self.book.id)
+        self.cwd = os.path.join(path, str(self.book.id))
         self.pagecwd = os.path.join(self.cwd, "pages")
     
     def run(self):
-        while True:
-            self._debug_print(self.book.title.pretty)
-            self._debug_print("Making directory...")
-            self._mkdir()
+        self._debug_print(self.book.title.pretty)
+        self._debug_print("Making directory...")
+        self._mkdir()
         
-            queue = Queue()
+        queue = Queue()
 
-            for x in range(self.workers):
-                t = Download_Thread(queue, self.book.id)
-                t.daemon = True
-                t.start()
+        for x in range(self.workers):
+            t = Download_Thread(queue, self.book.id)
+            t.daemon = True
+            t.start()
 
-            queue.put((self.book.images.cover.uri, self.cwd))
-            queue.put((self.book.images.thumbnail.uri, self.cwd))
+        queue.put((self.book.images.cover.uri, self.cwd))
+        queue.put((self.book.images.thumbnail.uri, self.cwd))
 
-            for x in self.book.images.pages:
-                queue.put((x.uri, self.pagecwd))
+        for x in self.book.images.pages:
+            queue.put((x.uri, self.pagecwd))
        
-            queue.join()
+        queue.join()
 
-            self._debug_print("Finished downloading.")
+        self._debug_print("Finished downloading.")
 
     def _debug_print(self, msg):
         print("{}: {}".format(str(self.book.id), msg))
