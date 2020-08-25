@@ -4,10 +4,11 @@ from queue import Queue
 import os, net
 
 class Book_Thread(Thread):
-    def __init__(self, book: Book, path, queue):
+    def __init__(self, book: Book, path, json, queue):
         Thread.__init__(self)
         self.book = book
         self.path = path
+        self.json = json
         self.queue = queue
         self.cwd = os.path.join(path, str(self.book.id))
         self.pagecwd = os.path.join(self.cwd, "pages")
@@ -16,6 +17,9 @@ class Book_Thread(Thread):
         self._debug_print(self.book.title.pretty)
         self._debug_print("Making directory...")
         self._mkdir()
+
+        if(self.json):
+            self.queue.put((net.get_json_uri(self.book.id), self.cwd))
 
         self.queue.put((self.book.images.cover.uri, self.cwd))
         self.queue.put((self.book.images.thumbnail.uri, self.cwd))
@@ -31,5 +35,5 @@ class Book_Thread(Thread):
         os.mkdir(self.pagecwd)
     
     @classmethod
-    def from_book_id(cls, book_id, path, queue) -> 'Book_Thread':
-        return cls(net.get_book(book_id), path, queue)
+    def from_book_id(cls, book_id, path, json, queue) -> 'Book_Thread':
+        return cls(net.get_book(book_id), path, json, queue)
