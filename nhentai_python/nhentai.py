@@ -10,15 +10,15 @@
 # with stuff such as HTTP and writing to disk.
 # I can't remember if requests is installed by default or not.
 # If it isn't, https://requests.readthedocs.io/en/master/user/install/
-import requests, sys, os, argparse, threading
+import requests, sys, os, argparse, threading, urllib
 
 # Moved the book-getting method into a function for multithreading.
 def get_book(n):
 	# Add the book id to the url so we can access the API
-	api_url = "https://nhentai.net/api/gallery/{}".format(n)
+	api_url = urllib.parse.urljoin("https://nhentai.net/api/gallery/", str(n))
 
 	# get the JSON so we can get the media id.
-	print("{}: Getting metadata from nhentai...".format(n))
+	printBook(n, "Getting metadata from nhentai...")
 	book_json = requests.get(api_url).json()
 
 	# Get the media id from the json so we can access the gallery.
@@ -26,7 +26,7 @@ def get_book(n):
 	printBook(n, "Media ID: {}".format(media_id))
 
 	# add the media id to the url
-	gallery_url = "https://i.nhentai.net/galleries/{}".format(media_id)
+	gallery_url = urllib.parse.urljoin("https://i.nhentai.net/galleries/", str(media_id))
 
 	# Make the directory.
 	printBook(n, "Making directory...")
@@ -35,22 +35,19 @@ def get_book(n):
 
 	# Here's where the jank begins!
 	i = 0
-	f = 1
 
 	printBook(n, "Downloading...")
 
 	# For all the pages, get the image type and download them.
 	for x in book_json["images"]["pages"]:
-		filename = "{}.{}".format(
-			f, getImageType(book_json["images"]["pages"][i]["t"]))
-		open("{}\{}".format(current_dir, filename), "xb").write(requests.get(
-			"{}/{}".format(gallery_url, filename), allow_redirects=True
-			).content)
+		uri = gallery_url + "/{}.{}".format(i + 1, getImageType(book_json["images"]["pages"][i]["t"]))
+		filename = uri.split('/')[-1]
+		with open(os.path.join(current_dir, filename), 'xb') as fd:
+			fd.write(requests.get(uri, allow_redirects=True).content)
 
 		printBook(n, "{} downloaded.".format("{}/{}".format(gallery_url, filename)))
     
 		i += 1
-		f += 1
 
 	printBook(n, "Finished downloading.")
 
@@ -94,6 +91,5 @@ for n in id_list:
 	threading.Thread(target=get_book, args=(n,)).start()
 
 for t in threading.enumerate():
-	if t == threading.current_thread():
-		continue
-	t.join()
+	if t != threading.current_thread():
+		t.join()
