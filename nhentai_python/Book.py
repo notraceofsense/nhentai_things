@@ -1,6 +1,6 @@
-import requests
 from images import *
 from title import *
+import urllib
 
 class Book(object):
     def __init__(self, id, media_id, title, gallery_url, thumbnail_url, images):
@@ -16,11 +16,7 @@ class Book(object):
         id = json['id']
         media_id = json['media_id']
         title = Title.from_json(json['title'])
-        gallery_url = "https://i.nhentai.net/galleries/{}".format(media_id)
-        thumbnail_url = "https://t.nhentai.net/galleries/{}".format(media_id)
+        gallery_url = urllib.parse.urljoin("https://i.nhentai.net/galleries/", str(media_id))
+        thumbnail_url = urllib.parse.urljoin("https://t.nhentai.net/galleries/", str(media_id))
         images = Images.from_json(json['images'], gallery_url, thumbnail_url)
         return cls(id, media_id, title, gallery_url, thumbnail_url, images)
-
-    @classmethod
-    def from_api(cls, id) -> 'Book':
-        return cls.from_json(json=requests.get("https://nhentai.net/api/gallery/{}".format(id)).json())

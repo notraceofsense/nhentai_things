@@ -6,4 +6,4 @@ class Title(object):
 
     @classmethod
     def from_json(cls, json) -> 'Title':
-        cls(json['english'], json['japanese'], json['pretty'])
+        return cls(json['english'], json['japanese'], json['pretty'])

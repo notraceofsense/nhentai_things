@@ -23,9 +23,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="book.py" />
-    <Compile Include="Book_Thread.py" />
+    <Compile Include="book_thread.py" />
+    <Compile Include="download_thread.py" />
     <Compile Include="image.py" />
     <Compile Include="images.py" />
+    <Compile Include="net.py" />
     <Compile Include="nhentai.py" />
     <Compile Include="test.py" />
     <Compile Include="title.py" />
