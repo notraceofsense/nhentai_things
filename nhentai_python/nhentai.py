@@ -2,7 +2,7 @@
 # A program for downloading stuff from nhentai using the numbers.
 # I was pretty tired when I originally wrote this, thus the code is kinda jank.
 # Rewriting to add some cool stuff and make things better.
-# TODO: multithreading (Book done), implement saving jsons, idk.
+# TODO: multithreading (done), implement saving jsons, idk.
 # Excessively commented so that almost anyone can understand.
 # usage: nhentai.py <digits> -p/--path <Path to folder> -j/--json (not done)
 
@@ -12,6 +12,8 @@
 # If it isn't, https://requests.readthedocs.io/en/master/user/install/
 import sys, os, argparse
 from book_thread import *
+from download_thread import *
+from queue import Queue
 
 # This big blob of code here is supposed to handle the command line args.
 # https://youtu.be/36lSzUMBJnc?t=176 << This is me right now.
@@ -29,14 +31,16 @@ args = vars(parser.parse_args())
 id_list = args.get('book_id')
 path = args.get('path')
 
-book_threads = []
+queue = Queue()
 
 # For loop, yay batch jobs!
 for n in id_list:
-	# Yay, multithreading
-	t = Book_Thread.from_book_id(n, path, 8)
+	t = Book_Thread.from_book_id(n, path, queue)
 	t.start()
-	book_threads.append(t)
 
-for t in book_threads:
-	t.join()
+for i in range(8):
+	t = Download_Thread(queue)
+	t.daemon = True
+	t.start()
+
+queue.join()
