@@ -12,6 +12,7 @@
     <OutputPath>.</OutputPath>
     <Name>nhentai_python</Name>
     <RootNamespace>nhentai_python</RootNamespace>
+    <TestFramework>Pytest</TestFramework>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -22,8 +23,14 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Book.py" />
+    <Compile Include="book.py" />
+    <Compile Include="book_thread.py" />
+    <Compile Include="download_thread.py" />
+    <Compile Include="image.py" />
+    <Compile Include="images.py" />
+    <Compile Include="net.py" />
     <Compile Include="nhentai.py" />
+    <Compile Include="title.py" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
